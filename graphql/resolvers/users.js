@@ -24,17 +24,14 @@ module.exports = {
         // Register Mutation
         async register(_, args) {
             // Validate Fields
+
             const username = args.registerInput.username;
             const email = args.registerInput.email;
             const password = args.registerInput.password;
             const confirmPassword = args.registerInput.confirmPassword;
+            const name = args.registerInput.name;
 
-            const { valid, errors } = validateRegister(
-                username,
-                email,
-                password,
-                confirmPassword
-            );
+            const { valid, errors } = validateRegister(username, email, password, confirmPassword, name);
 
             if (!valid) {
                 throw new UserInputError("Errors", errors);
@@ -56,6 +53,7 @@ module.exports = {
             const newUser = new User({
                 email,
                 username,
+                name,
                 password: encryPassword,
                 createdAt: new Date().toISOString(),
             });
