@@ -33,6 +33,7 @@ const typeDef = gql`
         confirmPassword: String!
         email: String!
         name: String!
+        image: Upload
     }
 
     type User {
@@ -42,6 +43,7 @@ const typeDef = gql`
         username: String!
         createdAt: String!
         name: String!
+        profilePic: String!
     }
 
     type Comment {

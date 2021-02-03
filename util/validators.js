@@ -47,4 +47,19 @@ const validateLogin = (username, password) => {
     };
 };
 
-module.exports = { validateRegister, validateLogin };
+const validateFile = async (file) => {
+    const errors = {};
+
+    const { createReadStream, filename, mimetype, encoding } = await file;
+
+    if (!(mimetype === "image/png" || mimetype === "image/jpg" || mimetype === "image/jpeg")) {
+        errors.fileType = "Only JPG, JPEG & PNG file formats are supported1";
+    }
+
+    return {
+        errors: errors,
+        valid: Object.keys(errors).length < 1,
+    };
+};
+
+module.exports = { validateRegister, validateLogin, validateFile };

@@ -20,5 +20,7 @@ mongoose
     })
     .then((res) => {
         console.log(`Server Runnning at ${res.url}`);
+        global.BASE_URL = res.url;
+        global.BASE_DIR = __dirname;
     })
     .catch((e) => console.log(e));

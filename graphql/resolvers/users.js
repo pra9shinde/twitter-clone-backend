@@ -1,10 +1,12 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const path = require("path");
+const fs = require("fs");
 
 const { UserInputError } = require("apollo-server");
 const { SECRET_KEY } = require("../../config");
 const User = require("../../models/User");
-const { validateRegister, validateLogin } = require("../../util/validators");
+const { validateRegister, validateLogin, validateFile } = require("../../util/validators");
 
 // Create token
 const generateToken = (user) => {
@@ -24,6 +26,7 @@ module.exports = {
         // Register Mutation
         async register(_, args) {
             // Validate Fields
+            console.log(args.registerInput.image);
 
             const username = args.registerInput.username;
             const email = args.registerInput.email;
@@ -48,6 +51,28 @@ module.exports = {
                 });
             }
 
+            let profilePic;
+            // Fileupload
+            if (args.registerInput.image) {
+                const file = args.registerInput.image;
+
+                const { valid, errors } = await validateFile(file);
+                if (!valid) {
+                    throw new UserInputError("Errors", errors);
+                }
+
+                const { createReadStream, filename, mimetype, encoding } = await file;
+                // upload file
+                const stream = createReadStream();
+                const pathName = path.join(BASE_DIR, `/uploads/images/${Date.now() + filename}`);
+
+                await stream.pipe(fs.createWriteStream(pathName));
+
+                profilePic = `uploads/images/${Date.now() + filename}`;
+            } else {
+                profilePic = `uploads/images/user.png`;
+            }
+
             //   Insert
             const encryPassword = await bcrypt.hash(password, 12);
             const newUser = new User({
@@ -55,6 +80,7 @@ module.exports = {
                 username,
                 name,
                 password: encryPassword,
+                profilePic: profilePic,
                 createdAt: new Date().toISOString(),
             });
 
@@ -66,6 +92,7 @@ module.exports = {
                 ...res._doc,
                 id: res._id,
                 token: token,
+                profilePic: profilePic,
             };
         },
 
