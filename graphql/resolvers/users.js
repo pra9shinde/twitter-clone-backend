@@ -26,8 +26,6 @@ module.exports = {
         // Register Mutation
         async register(_, args) {
             // Validate Fields
-            console.log(args.registerInput.image);
-
             const username = args.registerInput.username;
             const email = args.registerInput.email;
             const password = args.registerInput.password;
@@ -37,7 +35,7 @@ module.exports = {
             const { valid, errors } = validateRegister(username, email, password, confirmPassword, name);
 
             if (!valid) {
-                throw new UserInputError("Errors", errors);
+                throw new UserInputError("Errors", { errors });
             }
 
             //If username already taken
@@ -58,7 +56,7 @@ module.exports = {
 
                 const { valid, errors } = await validateFile(file);
                 if (!valid) {
-                    throw new UserInputError("Errors", errors);
+                    throw new UserInputError("Errors", { errors });
                 }
 
                 const { createReadStream, filename, mimetype, encoding } = await file;
