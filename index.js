@@ -1,4 +1,5 @@
-const { ApolloServer } = require("apollo-server");
+const express = require("express");
+const { ApolloServer } = require("apollo-server-express");
 const mongoose = require("mongoose");
 
 const { MONGODB } = require("./config");
@@ -11,15 +12,21 @@ const server = new ApolloServer({
     context: ({ req }) => ({ req }), //pass request body
 });
 
+const app = express();
+
+app.use("/uploads", express.static("uploads")); //Server Static files over Http
+
+server.applyMiddleware({ app });
+
 //
 mongoose
     .connect(MONGODB, { useNewUrlParser: true })
     .then(() => {
         console.log("MongoDB Connected Successfully");
-        return server.listen({ port: 4000 });
+        return app.listen({ port: 4000 });
     })
     .then((res) => {
-        console.log(`Server Runnning at ${res.url}`);
+        console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
         global.BASE_URL = res.url;
         global.BASE_DIR = __dirname;
     })
