@@ -15,6 +15,8 @@ const generateToken = (user) => {
             id: user.id,
             email: user.email,
             username: user.username,
+            name: user.name,
+            profilePic: user.profilePic,
         },
         SECRET_KEY,
         { expiresIn: "1h" }
@@ -62,11 +64,11 @@ module.exports = {
                 const { createReadStream, filename, mimetype, encoding } = await file;
                 // upload file
                 const stream = createReadStream();
-                const pathName = path.join(BASE_DIR, `/uploads/images/${Date.now() + filename}`);
+                const pathName = path.join(BASE_DIR, `/uploads/images/displayPicture/${Date.now() + filename}`);
 
                 await stream.pipe(fs.createWriteStream(pathName));
 
-                profilePic = `uploads/images/${Date.now() + filename}`;
+                profilePic = `uploads/images/displayPicture/${Date.now() + filename}`;
             } else {
                 profilePic = `uploads/images/user.png`;
             }

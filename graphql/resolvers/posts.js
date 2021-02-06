@@ -1,7 +1,11 @@
 const { AuthenticationError, UserInputError } = require("apollo-server");
+const path = require("path");
+const fs = require("fs");
 
 const Post = require("../../models/Post");
 const checkAuth = require("../../util/checkAuth");
+const { validateFile } = require("../../util/validators");
+
 module.exports = {
     Query: {
         async getPosts() {
@@ -29,15 +33,33 @@ module.exports = {
 
     Mutation: {
         // Create Post(Context body is passed in apollo server setup index.js)
-        async createPost(_, { body }, context) {
+        async createPost(_, { body, image }, context) {
             const user = checkAuth(context);
 
             if (body.trim() === "") {
-                throw new Error("Post body is empty");
+                throw new Error("*Tweet should'nt be empty...");
+            }
+
+            let imageURL = "";
+            // Fileupload
+            if (image) {
+                const { valid } = await validateFile(image);
+                if (!valid) {
+                    throw new Error("*Only jpg/png/jpeg images are allowed");
+                }
+
+                const { createReadStream, filename, mimetype, encoding } = await image;
+                // upload file
+                const stream = createReadStream();
+                const pathName = path.join(BASE_DIR, `/uploads/images/post/${Date.now() + filename}`);
+                await stream.pipe(fs.createWriteStream(pathName));
+
+                imageURL = `uploads/images/post/${Date.now() + filename}`;
             }
 
             const newPost = new Post({
                 body,
+                imageURL,
                 user: user.id,
                 username: user.username,
                 createdAt: new Date().toISOString(),
