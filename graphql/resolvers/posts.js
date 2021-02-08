@@ -1,6 +1,7 @@
 const { AuthenticationError, UserInputError } = require("apollo-server");
 const path = require("path");
 const fs = require("fs");
+const mongoose = require("mongoose");
 
 const Post = require("../../models/Post");
 const checkAuth = require("../../util/checkAuth");
@@ -10,7 +11,8 @@ module.exports = {
     Query: {
         async getPosts() {
             try {
-                const posts = await Post.find().sort({ createdAt: -1 });
+                // const posts = await Post.find().sort({ createdAt: -1 });
+                const posts = await Post.find().sort({ createdAt: -1 }).populate("user");
                 return posts;
             } catch (err) {
                 throw new Error(err);
@@ -51,16 +53,16 @@ module.exports = {
                 const { createReadStream, filename, mimetype, encoding } = await image;
                 // upload file
                 const stream = createReadStream();
-                const pathName = path.join(BASE_DIR, `/uploads/images/post/${Date.now() + filename}`);
+                const pathName = path.join(BASE_DIR, `/uploads/images/post/${new Date().getTime() + user.username + path.extname(filename)}`);
                 await stream.pipe(fs.createWriteStream(pathName));
 
-                imageURL = `uploads/images/post/${Date.now() + filename}`;
+                imageURL = `uploads/images/post/${new Date().getTime() + user.username + path.extname(filename)}`;
             }
 
             const newPost = new Post({
                 body,
                 imageURL,
-                user: user.id,
+                user: mongoose.Types.ObjectId(user.id),
                 username: user.username,
                 createdAt: new Date().toISOString(),
             });

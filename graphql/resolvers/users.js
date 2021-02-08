@@ -124,4 +124,19 @@ module.exports = {
             };
         },
     },
+
+    Query: {
+        async getUser(_, { userId }) {
+            try {
+                const user = await User.findById(userId);
+                if (user) {
+                    return user;
+                } else {
+                    throw new Error("No user found");
+                }
+            } catch (error) {
+                throw new Error(error);
+            }
+        },
+    },
 };

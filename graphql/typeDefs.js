@@ -11,11 +11,13 @@ const typeDef = gql`
         likeCount: Int!
         commentCount: Int!
         imageURL: String
+        user: User!
     }
 
     type Query {
         getPosts: [Post]
         getPost(postId: ID!): Post
+        getUser(userId: ID!): User
     }
 
     type Mutation {
