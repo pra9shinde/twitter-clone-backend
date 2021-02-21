@@ -1,10 +1,10 @@
-const express = require("express");
-const { ApolloServer } = require("apollo-server-express");
-const mongoose = require("mongoose");
+const express = require('express');
+const { ApolloServer } = require('apollo-server-express');
+const mongoose = require('mongoose');
 
-const { MONGODB } = require("./config");
-const typeDefs = require("./graphql/typeDefs");
-const resolvers = require("./graphql/resolvers/index");
+const { MONGODB } = require('./config');
+const typeDefs = require('./graphql/typeDefs');
+const resolvers = require('./graphql/resolvers/index');
 
 const server = new ApolloServer({
     typeDefs: typeDefs,
@@ -14,15 +14,15 @@ const server = new ApolloServer({
 
 const app = express();
 
-app.use("/uploads", express.static("uploads")); //Server Static files over Http
+app.use('/uploads', express.static('uploads')); //Server Static files over Http
 
 server.applyMiddleware({ app });
 
 //
 mongoose
-    .connect(MONGODB, { useNewUrlParser: true })
+    .connect(MONGODB, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
-        console.log("MongoDB Connected Successfully");
+        console.log('MongoDB Connected Successfully');
         return app.listen({ port: 4000 });
     })
     .then((res) => {

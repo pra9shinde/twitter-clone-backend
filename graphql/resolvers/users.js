@@ -1,12 +1,16 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const path = require("path");
-const fs = require("fs");
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const path = require('path');
+const fs = require('fs');
 
-const { UserInputError } = require("apollo-server");
-const { SECRET_KEY } = require("../../config");
-const User = require("../../models/User");
-const { validateRegister, validateLogin, validateFile } = require("../../util/validators");
+const { UserInputError } = require('apollo-server');
+const { SECRET_KEY } = require('../../config');
+const User = require('../../models/User');
+const {
+    validateRegister,
+    validateLogin,
+    validateFile,
+} = require('../../util/validators');
 
 // Create token
 const generateToken = (user) => {
@@ -19,7 +23,7 @@ const generateToken = (user) => {
             profilePic: user.profilePic,
         },
         SECRET_KEY,
-        { expiresIn: "1h" }
+        { expiresIn: '1h' }
     );
 };
 
@@ -34,19 +38,25 @@ module.exports = {
             const confirmPassword = args.registerInput.confirmPassword;
             const name = args.registerInput.name;
 
-            const { valid, errors } = validateRegister(username, email, password, confirmPassword, name);
+            const { valid, errors } = validateRegister(
+                username,
+                email,
+                password,
+                confirmPassword,
+                name
+            );
 
             if (!valid) {
-                throw new UserInputError("Errors", { errors });
+                throw new UserInputError('Errors', { errors });
             }
 
             //If username already taken
             const user = await User.findOne({ username: username });
 
             if (user) {
-                throw new UserInputError("Username is taken", {
+                throw new UserInputError('Username is taken', {
                     errors: {
-                        username: "This username is already taken",
+                        username: 'This username is already taken',
                     },
                 });
             }
@@ -58,17 +68,27 @@ module.exports = {
 
                 const { valid, errors } = await validateFile(file);
                 if (!valid) {
-                    throw new UserInputError("Errors", { errors });
+                    throw new UserInputError('Errors', { errors });
                 }
 
-                const { createReadStream, filename, mimetype, encoding } = await file;
+                const {
+                    createReadStream,
+                    filename,
+                    mimetype,
+                    encoding,
+                } = await file;
                 // upload file
                 const stream = createReadStream();
-                const pathName = path.join(BASE_DIR, `/uploads/images/displayPicture/${Date.now() + filename}`);
+                const pathName = path.join(
+                    BASE_DIR,
+                    `/uploads/images/displayPicture/${Date.now() + filename}`
+                );
 
                 await stream.pipe(fs.createWriteStream(pathName));
 
-                profilePic = `uploads/images/displayPicture/${Date.now() + filename}`;
+                profilePic = `uploads/images/displayPicture/${
+                    Date.now() + filename
+                }`;
             } else {
                 profilePic = `uploads/images/user.png`;
             }
@@ -101,19 +121,21 @@ module.exports = {
             const { errors, valid } = validateLogin(username, password);
 
             if (!valid) {
-                throw new UserInputError("Errors", { errors });
+                throw new UserInputError('Errors', { errors });
             }
 
             const user = await User.findOne({ username });
             if (!user) {
-                errors.general = "User not found";
-                throw new UserInputError("User not found, Please register", { errors });
+                errors.general = 'User not found';
+                throw new UserInputError('User not found, Please register', {
+                    errors,
+                });
             }
 
             const match = await bcrypt.compare(password, user.password);
             if (!match) {
-                errors.general = "Wrong credentials";
-                throw new UserInputError("Wrong credentials", { errors });
+                errors.general = 'Wrong credentials';
+                throw new UserInputError('Wrong credentials', { errors });
             }
 
             const token = generateToken(user);
@@ -132,7 +154,7 @@ module.exports = {
                 if (user) {
                     return user;
                 } else {
-                    throw new Error("No user found");
+                    throw new Error('No user found');
                 }
             } catch (error) {
                 throw new Error(error);
