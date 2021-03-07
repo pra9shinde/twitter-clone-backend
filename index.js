@@ -20,7 +20,7 @@ server.applyMiddleware({ app });
 
 //
 mongoose
-    .connect(MONGODB, { useNewUrlParser: true, useUnifiedTopology: true })
+    .connect(MONGODB, { useNewUrlParser: true, useUnifiedTopology: true, poolSize: 100 })
     .then(() => {
         console.log('MongoDB Connected Successfully');
         return app.listen({ port: 4000 });
