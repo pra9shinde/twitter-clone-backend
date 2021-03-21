@@ -1,18 +1,18 @@
-const { AuthenticationError, UserInputError } = require("apollo-server");
-const path = require("path");
-const fs = require("fs");
-const mongoose = require("mongoose");
+const { AuthenticationError, UserInputError } = require('apollo-server');
+const path = require('path');
+const fs = require('fs');
+const mongoose = require('mongoose');
 
-const Post = require("../../models/Post");
-const checkAuth = require("../../util/checkAuth");
-const { validateFile } = require("../../util/validators");
+const Post = require('../../models/Post');
+const checkAuth = require('../../util/checkAuth');
+const { validateFile } = require('../../util/validators');
 
 module.exports = {
     Query: {
         async getPosts() {
             try {
                 // const posts = await Post.find().sort({ createdAt: -1 });
-                const posts = await Post.find().sort({ createdAt: -1 }).populate("user");
+                const posts = await Post.find().sort({ createdAt: -1 }).populate('user');
                 return posts;
             } catch (err) {
                 throw new Error(err);
@@ -21,11 +21,11 @@ module.exports = {
 
         async getPost(_, { postId }) {
             try {
-                const post = await Post.findById(postId);
+                const post = await Post.findById(postId).populate('user');
                 if (post) {
                     return post;
                 } else {
-                    throw new Error("No post found");
+                    throw new Error('No post found');
                 }
             } catch (error) {
                 throw new Error(error);
@@ -38,16 +38,16 @@ module.exports = {
         async createPost(_, { body, image }, context) {
             const user = checkAuth(context);
 
-            if (body.trim() === "") {
+            if (body.trim() === '') {
                 throw new Error("*Tweet should'nt be empty...");
             }
 
-            let imageURL = "";
+            let imageURL = '';
             // Fileupload
             if (image) {
                 const { valid } = await validateFile(image);
                 if (!valid) {
-                    throw new Error("*Only jpg/png/jpeg images are allowed");
+                    throw new Error('*Only jpg/png/jpeg images are allowed');
                 }
 
                 const { createReadStream, filename, mimetype, encoding } = await image;
@@ -77,9 +77,9 @@ module.exports = {
                 const post = await Post.findById(postId);
                 if (user.username === post.username) {
                     await post.delete();
-                    return "Post deleted Successfully";
+                    return 'Post deleted Successfully';
                 } else {
-                    throw new AuthenticationError("This is not your post");
+                    throw new AuthenticationError('This is not your post');
                 }
             } catch (error) {
                 throw new Error(error);
@@ -107,7 +107,7 @@ module.exports = {
                 await post.save();
                 return post;
             } else {
-                throw new UserInputError("Post not found");
+                throw new UserInputError('Post not found');
             }
         },
     },
