@@ -12,7 +12,7 @@ module.exports = {
         async getPosts() {
             try {
                 // const posts = await Post.find().sort({ createdAt: -1 });
-                const posts = await Post.find().sort({ createdAt: -1 }).populate('user');
+                const posts = await Post.find().sort({ createdAt: -1 }).populate('user').exec();
                 return posts;
             } catch (err) {
                 throw new Error(err);
@@ -21,7 +21,14 @@ module.exports = {
 
         async getPost(_, { postId }) {
             try {
-                const post = await Post.findById(postId).populate('user');
+                // const post = await Post.findById(postId).populate('user').populate('comments').populate('comments.user').exec();
+                const post = await Post.findById(postId).populate('user').populate({
+                    path: 'comments',
+                    //now populate user details inside comments
+                    populate: {
+                        path: 'user',
+                    }
+                }).exec();
                 if (post) {
                     return post;
                 } else {
@@ -35,7 +42,7 @@ module.exports = {
 
     Mutation: {
         // Create Post(Context body is passed in apollo server setup index.js)
-        async createPost(_, { body, image }, context) {
+        async createPost(_, { body, image, isComment, replyingTo }, context) {
             const user = checkAuth(context);
 
             if (body.trim() === '') {
@@ -65,8 +72,27 @@ module.exports = {
                 user: mongoose.Types.ObjectId(user.id),
                 username: user.username,
                 createdAt: new Date().toISOString(),
+                isComment: isComment ? isComment : false ,
+                replyingTo: replyingTo ? mongoose.Types.ObjectId(replyingTo) : null,
             });
-            const post = await newPost.save();
+            let post = await newPost.save();
+
+            if(isComment && post){
+                //Get newly created postId and insert in in comments array of source post
+                const post = await Post.findById(replyingTo);
+                if (post) {
+                    // Unshift to place this comment on top
+                    const comments = [...post.comments];
+                    comments.unshift(mongoose.Types.ObjectId(post._id));
+
+                    const update = { comments: comments };
+                    const updatedPost = await User.findByIdAndUpdate(replyingTo, update, { new: true });
+                    if(updatedPost) post = updatedPost;
+                } else {
+                    throw new UserInputError('Post not found to comment');
+                }
+            }
+            
             return post;
         },
 

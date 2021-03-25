@@ -7,9 +7,8 @@ const postSchema = new Schema({
     createdAt: String,
     comments: [
         {
-            body: String,
-            username: String,
-            createdAt: String,
+            type: Schema.Types.ObjectId,
+            ref: "Post",
         },
     ],
     likes: [
@@ -22,8 +21,9 @@ const postSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "User",
     },
-
     imageURL: String,
+    isComment: Boolean,
+    replyingTo: Schema.Types.ObjectId,
 });
 
 module.exports = model("Post", postSchema);
