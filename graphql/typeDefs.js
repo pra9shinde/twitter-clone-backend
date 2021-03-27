@@ -25,9 +25,8 @@ const typeDef = gql`
         login(username: String!, password: String!): User!
         createPost(body: String!, image: Upload): Post!
         deletePost(postId: ID!): String!
-        createComment(postId: String!, body: String!): Post!
-        deleteComment(postId: ID!, commentId: ID!): Post!
         likePost(postId: ID!): Post!
+        deletePostComment(parentPostId: ID!, commentId: ID!): Post
     }
 
     input RegisterInput {

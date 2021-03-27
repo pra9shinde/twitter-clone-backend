@@ -22,13 +22,17 @@ module.exports = {
         async getPost(_, { postId }) {
             try {
                 // const post = await Post.findById(postId).populate('user').populate('comments').populate('comments.user').exec();
-                const post = await Post.findById(postId).populate('user').populate({
-                    path: 'comments',
-                    //now populate user details inside comments
-                    populate: {
-                        path: 'user',
-                    }
-                }).exec();
+                const post = await Post.findById(postId)
+                    .populate('user')
+                    .populate({
+                        path: 'comments',
+                        options: { sort: { createdAt: -1 } },
+                        //now populate user details inside comments
+                        populate: {
+                            path: 'user',
+                        },
+                    })
+                    .exec();
                 if (post) {
                     return post;
                 } else {
@@ -72,12 +76,12 @@ module.exports = {
                 user: mongoose.Types.ObjectId(user.id),
                 username: user.username,
                 createdAt: new Date().toISOString(),
-                isComment: isComment ? isComment : false ,
+                isComment: isComment ? isComment : false,
                 replyingTo: replyingTo ? mongoose.Types.ObjectId(replyingTo) : null,
             });
             let post = await newPost.save();
 
-            if(isComment && post){
+            if (isComment && post) {
                 //Get newly created postId and insert in in comments array of source post
                 const post = await Post.findById(replyingTo);
                 if (post) {
@@ -87,12 +91,12 @@ module.exports = {
 
                     const update = { comments: comments };
                     const updatedPost = await User.findByIdAndUpdate(replyingTo, update, { new: true });
-                    if(updatedPost) post = updatedPost;
+                    if (updatedPost) post = updatedPost;
                 } else {
                     throw new UserInputError('Post not found to comment');
                 }
             }
-            
+
             return post;
         },
 
@@ -134,6 +138,49 @@ module.exports = {
                 return post;
             } else {
                 throw new UserInputError('Post not found');
+            }
+        },
+
+        // Delete Post Comment(Remove it from comments array of origin post)
+        async deletePostComment(_, { parentPostId, commentId }, context) {
+            try {
+                //Authenticate
+                const { username } = checkAuth(context);
+
+                const commentPost = await Post.findById(commentId);
+
+                if (commentPost.username === username) {
+                    const post = await Post.findById(parentPostId);
+                    if (post) {
+                        const newArray = post.comments.filter((p) => {
+                            if (p != commentId) {
+                                return mongoose.Types.ObjectId(commentId);
+                            }
+                        });
+
+                        post.comments = newArray;
+                        const updatedPost = await post.save(); //Delete comment id from comments array
+                        const populatedPost = await updatedPost
+                            .populate('user')
+                            .populate({
+                                path: 'comments',
+                                options: { sort: { createdAt: -1 } },
+                                //now populate user details inside comments
+                                populate: {
+                                    path: 'user',
+                                },
+                            })
+                            .execPopulate(); //return populated data after successfull operation
+                        return populatedPost;
+                    } else {
+                        throw new UserInputError('Post not found');
+                    }
+                } else {
+                    throw new AuthenticationError('Action not allowed');
+                }
+            } catch (error) {
+                console.log(error);
+                throw new Error(error);
             }
         },
     },
