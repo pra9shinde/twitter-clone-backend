@@ -12,6 +12,8 @@ const typeDef = gql`
         commentCount: Int!
         imageURL: String
         user: User!
+        isComment: Boolean
+        replyingTo: ID
     }
 
     type Query {
@@ -23,7 +25,7 @@ const typeDef = gql`
     type Mutation {
         register(registerInput: RegisterInput): User!
         login(username: String!, password: String!): User!
-        createPost(body: String!, image: Upload): Post!
+        createPost(body: String!, image: Upload, isComment: Boolean, replyingTo: ID): Post!
         deletePost(postId: ID!): String!
         likePost(postId: ID!): Post!
         deletePostComment(parentPostId: ID!, commentId: ID!): Post

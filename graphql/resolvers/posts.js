@@ -48,7 +48,6 @@ module.exports = {
         // Create Post(Context body is passed in apollo server setup index.js)
         async createPost(_, { body, image, isComment, replyingTo }, context) {
             const user = checkAuth(context);
-
             if (body.trim() === '') {
                 throw new Error("*Tweet should'nt be empty...");
             }
@@ -79,19 +78,31 @@ module.exports = {
                 isComment: isComment ? isComment : false,
                 replyingTo: replyingTo ? mongoose.Types.ObjectId(replyingTo) : null,
             });
-            let post = await newPost.save();
+            const post = await newPost.save();
 
-            if (isComment && post) {
+            if (isComment && replyingTo && post) {
                 //Get newly created postId and insert in in comments array of source post
-                const post = await Post.findById(replyingTo);
-                if (post) {
+                const parentPost = await Post.findById(replyingTo);
+                if (parentPost) {
                     // Unshift to place this comment on top
-                    const comments = [...post.comments];
+                    const comments = [...parentPost.comments];
                     comments.unshift(mongoose.Types.ObjectId(post._id));
 
                     const update = { comments: comments };
-                    const updatedPost = await User.findByIdAndUpdate(replyingTo, update, { new: true });
-                    if (updatedPost) post = updatedPost;
+                    const updatedPost = await Post.findByIdAndUpdate(replyingTo, update, { new: true });
+                    if (!updatedPost) throw new Error('Unable to reply to tweet');
+                    const populatedPost = await updatedPost
+                        .populate('user')
+                        .populate({
+                            path: 'comments',
+                            options: { sort: { createdAt: -1 } },
+                            //now populate user details inside comments
+                            populate: {
+                                path: 'user',
+                            },
+                        })
+                        .execPopulate(); //return populated data after successfull operation
+                    return populatedPost;
                 } else {
                     throw new UserInputError('Post not found to comment');
                 }
@@ -171,6 +182,7 @@ module.exports = {
                                 },
                             })
                             .execPopulate(); //return populated data after successfull operation
+
                         return populatedPost;
                     } else {
                         throw new UserInputError('Post not found');
