@@ -12,7 +12,18 @@ module.exports = {
         async getPosts() {
             try {
                 // const posts = await Post.find().sort({ createdAt: -1 });
-                const posts = await Post.find().sort({ createdAt: -1 }).populate('user').exec();
+                const posts = await Post.find({ replyingTo: null, isComment: false })
+                    .sort({ createdAt: -1 })
+                    .populate('user')
+                    .populate({
+                        path: 'comments',
+                        options: { sort: { createdAt: -1 } },
+                        //now populate user details inside comments
+                        populate: {
+                            path: 'user',
+                        },
+                    })
+                    .exec();
                 return posts;
             } catch (err) {
                 throw new Error(err);
@@ -89,7 +100,7 @@ module.exports = {
                     comments.unshift(mongoose.Types.ObjectId(post._id));
 
                     const update = { comments: comments };
-                    const updatedPost = await Post.findByIdAndUpdate(replyingTo, update, { new: true });
+                    const updatedPost = await Post.findByIdAndUpdate(replyingTo, update, { new: true, useFindAndModify: false });
                     if (!updatedPost) throw new Error('Unable to reply to tweet');
                     const populatedPost = await updatedPost
                         .populate('user')
