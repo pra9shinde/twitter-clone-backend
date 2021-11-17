@@ -18,7 +18,7 @@ app.use('/uploads', express.static('uploads')); //Server Static files over Http
 
 server.applyMiddleware({ app });
 
-const PORT = process.env.port || 4000;
+const PORT = process.env.PORT || 4000;
 
 //
 mongoose
