@@ -66,18 +66,24 @@ module.exports = {
             let imageURL = '';
             // Fileupload
             if (image) {
-                const { valid } = await validateFile(image);
-                if (!valid) {
-                    throw new Error('*Only jpg/png/jpeg images are allowed');
+                try {
+                    const { valid } = await validateFile(image);
+                    if (!valid) {
+                        throw new Error('*Only jpg/png/jpeg images are allowed');
+                    }
+
+                    const { createReadStream, filename, mimetype, encoding } = await image;
+                    // upload file
+                    const stream = createReadStream();
+                    const pathName = path.join(BASE_DIR, `/uploads/images/post/${new Date().getTime() + user.username + path.extname(filename)}`);
+                    await stream.pipe(fs.createWriteStream(pathName));
+
+                    imageURL = `uploads/images/post/${new Date().getTime() + user.username + path.extname(filename)}`;
+                } catch (error) {
+                    console.log('==============File Error======================');
+                    console.log(error);
+                    console.log('==============File Error======================');
                 }
-
-                const { createReadStream, filename, mimetype, encoding } = await image;
-                // upload file
-                const stream = createReadStream();
-                const pathName = path.join(BASE_DIR, `/uploads/images/post/${new Date().getTime() + user.username + path.extname(filename)}`);
-                await stream.pipe(fs.createWriteStream(pathName));
-
-                imageURL = `uploads/images/post/${new Date().getTime() + user.username + path.extname(filename)}`;
             }
 
             const newPost = new Post({
