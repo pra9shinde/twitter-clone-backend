@@ -6,12 +6,6 @@ const { MONGODB } = require('./config');
 const typeDefs = require('./graphql/typeDefs');
 const resolvers = require('./graphql/resolvers/index');
 
-// CORS configuration
-const corsOptions = {
-    origin: 'https://shindetter.netlify.app',
-    credentials: true,
-};
-
 const server = new ApolloServer({
     typeDefs: typeDefs,
     resolvers: resolvers,
@@ -19,8 +13,6 @@ const server = new ApolloServer({
 });
 
 const app = express();
-
-server.applyMiddleware({ app, cors: corsOptions }); //allow cors via apollo middleware api
 
 app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', 'https://shindetter.netlify.app'); // update to match the domain you will make the request from
