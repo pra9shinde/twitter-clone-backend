@@ -10,6 +10,10 @@ const server = new ApolloServer({
     typeDefs: typeDefs,
     resolvers: resolvers,
     context: ({ req }) => ({ req }), //pass request body
+    cors: {
+        origin: 'https://shindetter.netlify.app',
+        credentials: true,
+    },
 });
 
 const app = express();
